@@ -1,4 +1,3 @@
-
 import dao.DatabaseConnection;
 import ui.Menu;
 
@@ -11,4 +10,3 @@ public class Main {
         menu.start();
     }
 }
-gg
