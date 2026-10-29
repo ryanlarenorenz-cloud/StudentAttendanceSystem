@@ -97,7 +97,7 @@ public class Authentication {
     private void routeByRole(User user) {
         switch (user.roles()) {
             case "ADMIN" ->
-                    new AdminMenu(userDao, scanner).start();
+                    new ui.AdminMenu(userDao, scanner, user).start();
 
             case "TEACHER" ->
                     teacherMenu(user);

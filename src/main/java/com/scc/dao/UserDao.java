@@ -11,10 +11,18 @@ public class UserDao {
     // REGISTER USER
     public boolean register(String username, String password, String role) {
 
-        if (username.isBlank() || password.isBlank()) {
+        if (username == null || username.isBlank()
+                || password == null || password.isBlank()) {
             System.out.println("Username and password are required.");
             return false;
         }
+
+        if (role == null) {
+            System.out.println("Invalid role.");
+            return false;
+        }
+
+        role = role.trim().toUpperCase();
 
         if (!role.equals("ADMIN")
                 && !role.equals("TEACHER")
@@ -127,13 +135,7 @@ public class UserDao {
              ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
-                users.add(new User(
-                        rs.getInt("id"),
-                        rs.getString("username"),
-                        rs.getString("password"),
-                        rs.getString("roles"),
-                        rs.getString("status")
-                ));
+                users.add(mapUser(rs));
             }
 
         } catch (SQLException e) {
@@ -160,13 +162,7 @@ public class UserDao {
              ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
-                users.add(new User(
-                        rs.getInt("id"),
-                        rs.getString("username"),
-                        rs.getString("password"),
-                        rs.getString("roles"),
-                        rs.getString("status")
-                ));
+                users.add(mapUser(rs));
             }
 
         } catch (SQLException e) {
@@ -202,5 +198,73 @@ public class UserDao {
         }
 
         return false;
+    }
+
+    // UPDATE USER ROLE AND STATUS
+    public boolean updateUserRoleAndStatus(
+            int userId, String newRole, String newStatus) {
+
+        if (newRole == null || newStatus == null) {
+            System.out.println("Role and status are required.");
+            return false;
+        }
+
+        newRole = newRole.trim().toUpperCase();
+        newStatus = newStatus.trim().toUpperCase();
+
+        if (!newRole.equals("STUDENT")
+                && !newRole.equals("TEACHER")
+                && !newRole.equals("ADMIN")) {
+            System.out.println("Invalid role.");
+            return false;
+        }
+
+        if (!newStatus.equals("APPROVED")
+                && !newStatus.equals("PENDING")) {
+            System.out.println("Invalid status.");
+            return false;
+        }
+
+        String sql = """
+                UPDATE users
+                SET roles = ?, status = ?
+                WHERE id = ?
+                """;
+
+        try (Connection conn = dao.DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, newRole);
+            ps.setString(2, newStatus);
+            ps.setInt(3, userId);
+
+            int rowsUpdated = ps.executeUpdate();
+
+            if (rowsUpdated > 0) {
+                System.out.println("User role and status updated successfully!");
+                System.out.println("New role: " + newRole);
+                System.out.println("New status: " + newStatus);
+                return true;
+            }
+
+            System.out.println("User ID not found.");
+
+        } catch (SQLException e) {
+            System.out.println("Update failed: " + e.getMessage());
+        }
+
+        return false;
+    }
+
+    // MAP DATABASE ROW TO USER OBJECT
+    private User mapUser(ResultSet rs) throws SQLException {
+
+        return new User(
+                rs.getInt("id"),
+                rs.getString("username"),
+                rs.getString("password"),
+                rs.getString("roles"),
+                rs.getString("status")
+        );
     }
 }
